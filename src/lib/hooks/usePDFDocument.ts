@@ -54,7 +54,7 @@ export const usePDFDocument = (): UsePDFDocumentReturn => {
 
   const clearDocument = useCallback(() => {
     if (document) {
-      document.dispose();
+      document.destroy();
     }
     setDocument(null);
     setError(null);
@@ -71,7 +71,7 @@ export const usePDFDocument = (): UsePDFDocumentReturn => {
 
         // Dispose previous document if it exists
         if (document) {
-          document.dispose();
+          document.destroy();
           setDocument(null);
           setPageCount(0);
         }
@@ -123,7 +123,7 @@ export const usePDFDocument = (): UsePDFDocumentReturn => {
   useEffect(() => {
     return () => {
       if (document) {
-        document.dispose();
+        document.destroy();
       }
     };
   }, [document]);

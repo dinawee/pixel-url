@@ -2,7 +2,7 @@
 export interface PDFDocument {
   numPages: number;
   fingerprint: string;
-  dispose(): void;
+  destroy(): void;
   getPage(pageNumber: number): Promise<PDFPage>;
 }
 

@@ -15,7 +15,7 @@ import type { PDFDocumentLoadingTask } from 'pdfjs-dist';
 const mockPDFDocument = {
   numPages: 5,
   fingerprint: 'mock-fingerprint-123',
-  dispose: vi.fn(),
+  destroy: vi.fn(),
 };
 
 const mockGetDocument = vi.mocked(getDocument);
@@ -63,7 +63,7 @@ describe('usePDFDocument', () => {
       const mockFile = createMockPDFFile('test-document.pdf');
 
       await act(async () => {
-      await result.current.loadDocument(mockFile);
+        await result.current.loadDocument(mockFile);
       });
 
       await waitFor(() => {
@@ -146,7 +146,7 @@ describe('usePDFDocument', () => {
       const invalidFile = createInvalidFile('document.txt');
 
       await act(async () => {
-      await result.current.loadDocument(invalidFile);
+        await result.current.loadDocument(invalidFile);
       });
 
       await waitFor(() => {
@@ -164,7 +164,7 @@ describe('usePDFDocument', () => {
       const oversizedFile = createMockPDFFile('huge.pdf', 51 * 1024 * 1024);
 
       await act(async () => {
-      await result.current.loadDocument(oversizedFile);
+        await result.current.loadDocument(oversizedFile);
       });
 
       await waitFor(() => {
@@ -183,7 +183,7 @@ describe('usePDFDocument', () => {
       const testUrl = 'https://example.com/test.pdf';
 
       await act(async () => {
-      await result.current.loadDocument(testUrl);
+        await result.current.loadDocument(testUrl);
       });
 
       await waitFor(() => {
@@ -205,7 +205,7 @@ describe('usePDFDocument', () => {
       const invalidUrl = 'not-a-valid-url';
 
       await act(async () => {
-      await result.current.loadDocument(invalidUrl);
+        await result.current.loadDocument(invalidUrl);
       });
 
       await waitFor(() => {
@@ -259,7 +259,7 @@ describe('usePDFDocument', () => {
       expect(result.current.error).toBeNull();
       expect(result.current.pageCount).toBe(0);
       expect(result.current.isLoading).toBe(false);
-      expect(mockPDFDocument.dispose).toHaveBeenCalled();
+      expect(mockPDFDocument.destroy).toHaveBeenCalled();
     });
 
     it('should dispose previous document when loading new one', async () => {
@@ -290,7 +290,7 @@ describe('usePDFDocument', () => {
       });
 
       await waitFor(() => {
-        expect(firstMockDocument.dispose).toHaveBeenCalled();
+        expect(firstMockDocument.destroy).toHaveBeenCalled();
         expect(result.current.document).toBe(secondMockDocument);
       });
     });
@@ -313,7 +313,7 @@ describe('usePDFDocument', () => {
         unmount();
       });
 
-      expect(mockPDFDocument.dispose).toHaveBeenCalled();
+      expect(mockPDFDocument.destroy).toHaveBeenCalled();
     });
   });
 });
