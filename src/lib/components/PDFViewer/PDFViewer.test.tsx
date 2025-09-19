@@ -133,4 +133,66 @@ describe('PDFViewer', () => {
       // Verify no memory leaks (implementation will handle cleanup)
     });
   });
+
+  describe('render cancellation', () => {
+    it('should cancel previous render when props change rapidly', async () => {
+      const mockCancelableRenderTask = {
+        promise: new Promise(resolve => setTimeout(resolve, 100)), // Slow render
+        cancel: vi.fn(),
+      };
+
+      mockPage.render.mockReturnValue(mockCancelableRenderTask);
+
+      const { rerender } = render(<PDFViewer document={mockDocument} pageNumber={1} />);
+
+      // Wait for first render to start
+      await waitFor(() => {
+        expect(mockPage.render).toHaveBeenCalledTimes(1);
+      });
+
+      // Quickly change page before first render completes
+      rerender(<PDFViewer document={mockDocument} pageNumber={2} />);
+
+      await waitFor(() => {
+        expect(mockCancelableRenderTask.cancel).toHaveBeenCalled();
+      });
+    });
+
+    it('should handle cancellation errors gracefully', async () => {
+      const cancellationError = new Error('Render cancelled');
+      cancellationError.name = 'RenderingCancelledException';
+
+      const mockFailingRenderTask = {
+        promise: Promise.reject(cancellationError),
+        cancel: vi.fn(),
+      };
+
+      mockPage.render.mockReturnValue(mockFailingRenderTask);
+
+      render(<PDFViewer document={mockDocument} />);
+
+      // Should not show error for cancellation
+      await waitFor(() => {
+        expect(screen.queryByText(/error rendering page/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it('should show error for non-cancellation render failures', async () => {
+      const renderError = new Error('Actual render error');
+
+      const mockFailingRenderTask = {
+        promise: Promise.reject(renderError),
+        cancel: vi.fn(),
+      };
+
+      mockPage.render.mockReturnValue(mockFailingRenderTask);
+
+      render(<PDFViewer document={mockDocument} />);
+
+      // Should show error for real failures
+      await waitFor(() => {
+        expect(screen.getByText('Error rendering page: Actual render error')).toBeInTheDocument();
+      });
+    });
+  });
 });

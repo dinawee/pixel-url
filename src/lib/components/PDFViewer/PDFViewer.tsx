@@ -23,6 +23,8 @@ export function PDFViewer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderTaskRef = useRef<any>(null);
 
   useEffect(() => {
     if (!document || !canvasRef.current) {
@@ -31,6 +33,12 @@ export function PDFViewer({
 
     const renderPage = async () => {
       try {
+        // Cancel any previous render operation
+        if (renderTaskRef.current) {
+          renderTaskRef.current.cancel();
+          renderTaskRef.current = null;
+        }
+
         setRenderError(null);
         setIsRendering(true);
 
@@ -63,16 +71,37 @@ export function PDFViewer({
           viewport,
         });
 
+        // Store the render task so we can cancel it if needed
+        renderTaskRef.current = renderTask;
+
         await renderTask.promise;
+
+        // Clear the render task reference on successful completion
+        renderTaskRef.current = null;
       } catch (err) {
+        // Check if the error is due to cancellation
+        if (err instanceof Error && err.name === 'RenderingCancelledException') {
+          // Ignore cancellation errors - they're expected
+          return;
+        }
+
         const errorMessage = err instanceof Error ? err.message : 'Unknown rendering error';
         setRenderError(errorMessage);
+        renderTaskRef.current = null;
       } finally {
         setIsRendering(false);
       }
     };
 
     renderPage();
+
+    // Cleanup function to cancel render task if component unmounts
+    return () => {
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
+      }
+    };
   }, [document, pageNumber, scale]);
 
   // Show loading state
