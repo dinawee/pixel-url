@@ -1,0 +1,1 @@
+export { PDFZoomControls } from './PDFZoomControls';

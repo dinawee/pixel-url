@@ -113,7 +113,14 @@ export function PDFViewer({
 
   return (
     <div className={className} style={style}>
-      <canvas ref={canvasRef} role="canvas" style={{ maxWidth: '100%', height: 'auto' }} />
+      <canvas
+        ref={canvasRef}
+        role="canvas"
+        style={{
+          display: 'block',
+          margin: '0 auto' // Centers horizontally, allows full scroll when overflowing
+        }}
+      />
       {isRendering && <div>Rendering page...</div>}
     </div>
   );

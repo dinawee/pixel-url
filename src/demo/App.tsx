@@ -1,17 +1,19 @@
-import { useState } from 'react';
-import { usePDFDocument, PDFViewer, PDFPageNavigation } from '@pixel-url/core';
+import { useState, useCallback } from 'react';
+import { usePDFDocument, PDFViewer, PDFPageNavigation, PDFZoomControls } from '@pixel-url/core';
 import './App.css';
 
 function App() {
   const { document, isLoading, error, pageCount, loadDocument, clearDocument } = usePDFDocument();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(1);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
       setCurrentPage(1); // Reset to first page
+      setScale(1); // Reset zoom
       await loadDocument(file);
     }
   };
@@ -20,11 +22,22 @@ function App() {
     clearDocument();
     setSelectedFile(null);
     setCurrentPage(1);
+    setScale(1);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  const handleScaleChange = useCallback((newScale: number | 'fit-width') => {
+    if (newScale === 'fit-width') {
+      // For now, set a reasonable fit-width scale
+      // In a real implementation, this would calculate based on container width
+      setScale(1.2);
+    } else {
+      setScale(newScale);
+    }
+  }, []);
 
   return (
     <div className="App">
@@ -59,22 +72,48 @@ function App() {
           </div>
         )}
 
-        {document && pageCount > 1 && (
-          <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'center' }}>
-            <PDFPageNavigation
-              currentPage={currentPage}
-              totalPages={pageCount}
-              onPageChange={handlePageChange}
+        {document && (
+          <div
+            style={{
+              marginBottom: '15px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '10px',
+            }}
+          >
+            <PDFZoomControls
+              scale={scale}
+              hasDocument={!!document}
+              onScaleChange={handleScaleChange}
             />
+            {pageCount > 1 && (
+              <PDFPageNavigation
+                currentPage={currentPage}
+                totalPages={pageCount}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         )}
 
-        <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
+        <div
+          style={{
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            overflow: 'auto',
+            width: document ? '800px' : 'auto', // Fixed width
+            height: document ? '600px' : 'auto', // Fixed height
+            margin: '0 auto', // Center the container
+            padding: document ? '0' : '10px',
+          }}
+        >
           <PDFViewer
             document={document}
             isLoading={isLoading}
             error={error}
-            scale={1}
+            scale={scale}
             pageNumber={currentPage}
           />
         </div>
