@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { usePDFDocument, PDFViewer, PDFPageNavigation, PDFZoomControls } from '@pixel-url/core';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { usePDFDocument, PDFViewer, PDFPageNavigation, PDFZoomControls, useScrollPan } from '@pixel-url/core';
 import './App.css';
 
 function App() {
@@ -7,6 +7,34 @@ function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollToRef = useRef<((x: number, y: number) => void) | null>(null);
+
+  const handlePageBoundary = useCallback((direction: 'next' | 'prev') => {
+    if (direction === 'next' && currentPage < pageCount) {
+      setCurrentPage(currentPage + 1);
+      // Reset scroll to top of new page after a brief delay for rendering
+      setTimeout(() => {
+        scrollToRef.current?.(0, 0);
+      }, 50);
+    } else if (direction === 'prev' && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      // Reset scroll to bottom of new page after a brief delay for rendering
+      setTimeout(() => {
+        if (containerRef.current && scrollToRef.current) {
+          const maxScrollTop = containerRef.current.scrollHeight - containerRef.current.clientHeight;
+          scrollToRef.current(0, maxScrollTop);
+        }
+      }, 50);
+    }
+  }, [currentPage, pageCount]);
+
+  const { isPanning, scrollPosition, attachContainer, scrollTo, centerContent } = useScrollPan(handlePageBoundary);
+
+  // Store scrollTo function in ref so handlePageBoundary can access it
+  useEffect(() => {
+    scrollToRef.current = scrollTo;
+  }, [scrollTo]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -38,6 +66,23 @@ function App() {
       setScale(newScale);
     }
   }, []);
+
+  // Attach container to scroll/pan hook
+  useEffect(() => {
+    attachContainer(containerRef.current);
+  }, [attachContainer]);
+
+  // Center content only on zoom changes, not initial load or page changes
+  useEffect(() => {
+    if (document && scale !== 1) {
+      // Only center when zoomed (not at 100%)
+      const timer = setTimeout(() => {
+        centerContent();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scale, centerContent]); // no centering on doc change
 
   return (
     <div className="App">
@@ -98,7 +143,25 @@ function App() {
           </div>
         )}
 
+        {document && (
+          <div style={{
+            marginBottom: '10px',
+            textAlign: 'center',
+            fontSize: '12px',
+            color: '#666',
+            fontFamily: 'monospace'
+          }}>
+            Scroll: ({Math.round(scrollPosition.x)}, {Math.round(scrollPosition.y)})
+            {isPanning && ' • Panning...'}
+            <br />
+            <span style={{ fontSize: '10px' }}>
+              Click and drag to pan • Mouse wheel/arrows cross pages • Keyboard: ↑↓←→ PgUp PgDn Home End
+            </span>
+          </div>
+        )}
+
         <div
+          ref={containerRef}
           style={{
             border: '1px solid #ccc',
             borderRadius: '8px',
@@ -107,6 +170,8 @@ function App() {
             height: document ? '600px' : 'auto', // Fixed height
             margin: '0 auto', // Center the container
             padding: document ? '0' : '10px',
+            cursor: isPanning ? 'grabbing' : document ? 'grab' : 'default',
+            userSelect: 'none', // Prevent text selection while panning
           }}
         >
           <PDFViewer
