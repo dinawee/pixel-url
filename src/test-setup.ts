@@ -1,8 +1,5 @@
 import '@testing-library/jest-dom';
 
-// Mock PDF.js worker
-const mockWorkerSrc = 'mock-worker.js';
-
 // Global mocks for tests
 global.URL.createObjectURL = vi.fn(() => 'mock-url');
 global.URL.revokeObjectURL = vi.fn();
@@ -28,11 +25,3 @@ const mockCanvas = {
 
 global.HTMLCanvasElement.prototype.getContext = mockCanvas.getContext;
 global.HTMLCanvasElement.prototype.toDataURL = mockCanvas.toDataURL;
-
-// PDF.js global worker setup mock
-vi.mock('pdfjs-dist', () => ({
-  GlobalWorkerOptions: {
-    workerSrc: mockWorkerSrc,
-  },
-  getDocument: vi.fn(),
-}));
