@@ -96,7 +96,7 @@ export function PDFZoomControls({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasDocument, scale]); // change in scale will cause a rerender -> new handleZoomIn, handleZoomOut, handleActualSize functions created with the updated scale value
 
   return (

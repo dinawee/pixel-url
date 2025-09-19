@@ -1,5 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { usePDFDocument, PDFViewer, PDFPageNavigation, PDFZoomControls, useScrollPan } from '@pixel-url/core';
+import {
+  usePDFDocument,
+  PDFViewer,
+  PDFPageNavigation,
+  PDFZoomControls,
+  useScrollPan,
+} from '@pixel-url/core';
 import './App.css';
 
 function App() {
@@ -10,26 +16,31 @@ function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollToRef = useRef<((x: number, y: number) => void) | null>(null);
 
-  const handlePageBoundary = useCallback((direction: 'next' | 'prev') => {
-    if (direction === 'next' && currentPage < pageCount) {
-      setCurrentPage(currentPage + 1);
-      // Reset scroll to top of new page after a brief delay for rendering
-      setTimeout(() => {
-        scrollToRef.current?.(0, 0);
-      }, 50);
-    } else if (direction === 'prev' && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      // Reset scroll to bottom of new page after a brief delay for rendering
-      setTimeout(() => {
-        if (containerRef.current && scrollToRef.current) {
-          const maxScrollTop = containerRef.current.scrollHeight - containerRef.current.clientHeight;
-          scrollToRef.current(0, maxScrollTop);
-        }
-      }, 50);
-    }
-  }, [currentPage, pageCount]);
+  const handlePageBoundary = useCallback(
+    (direction: 'next' | 'prev') => {
+      if (direction === 'next' && currentPage < pageCount) {
+        setCurrentPage(currentPage + 1);
+        // Reset scroll to top of new page after a brief delay for rendering
+        setTimeout(() => {
+          scrollToRef.current?.(0, 0);
+        }, 50);
+      } else if (direction === 'prev' && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+        // Reset scroll to bottom of new page after a brief delay for rendering
+        setTimeout(() => {
+          if (containerRef.current && scrollToRef.current) {
+            const maxScrollTop =
+              containerRef.current.scrollHeight - containerRef.current.clientHeight;
+            scrollToRef.current(0, maxScrollTop);
+          }
+        }, 50);
+      }
+    },
+    [currentPage, pageCount]
+  );
 
-  const { isPanning, scrollPosition, attachContainer, scrollTo, centerContent } = useScrollPan(handlePageBoundary);
+  const { isPanning, scrollPosition, attachContainer, scrollTo, centerContent } =
+    useScrollPan(handlePageBoundary);
 
   // Store scrollTo function in ref so handlePageBoundary can access it
   useEffect(() => {
@@ -81,7 +92,7 @@ function App() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scale, centerContent]); // no centering on doc change
 
   return (
@@ -144,18 +155,21 @@ function App() {
         )}
 
         {document && (
-          <div style={{
-            marginBottom: '10px',
-            textAlign: 'center',
-            fontSize: '12px',
-            color: '#666',
-            fontFamily: 'monospace'
-          }}>
+          <div
+            style={{
+              marginBottom: '10px',
+              textAlign: 'center',
+              fontSize: '12px',
+              color: '#666',
+              fontFamily: 'monospace',
+            }}
+          >
             Scroll: ({Math.round(scrollPosition.x)}, {Math.round(scrollPosition.y)})
             {isPanning && ' • Panning...'}
             <br />
             <span style={{ fontSize: '10px' }}>
-              Click and drag to pan • Mouse wheel/arrows cross pages • Keyboard: ↑↓←→ PgUp PgDn Home End
+              Click and drag to pan • Mouse wheel/arrows cross pages • Keyboard: ↑↓←→ PgUp PgDn Home
+              End
             </span>
           </div>
         )}

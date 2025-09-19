@@ -63,11 +63,16 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
-      expect(mockContainer.addEventListener).toHaveBeenCalledWith('mousedown', expect.any(Function));
-      expect(mockContainer.addEventListener).toHaveBeenCalledWith('wheel', expect.any(Function), { passive: false });
+      expect(mockContainer.addEventListener).toHaveBeenCalledWith(
+        'mousedown',
+        expect.any(Function)
+      );
+      expect(mockContainer.addEventListener).toHaveBeenCalledWith('wheel', expect.any(Function), {
+        passive: false,
+      });
       expect(mockContainer.addEventListener).toHaveBeenCalledWith('scroll', expect.any(Function));
     });
 
@@ -75,14 +80,20 @@ describe('useScrollPan', () => {
       const { result, unmount } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       unmount();
 
-      expect(mockContainer.removeEventListener).toHaveBeenCalledWith('mousedown', expect.any(Function));
+      expect(mockContainer.removeEventListener).toHaveBeenCalledWith(
+        'mousedown',
+        expect.any(Function)
+      );
       expect(mockContainer.removeEventListener).toHaveBeenCalledWith('wheel', expect.any(Function));
-      expect(mockContainer.removeEventListener).toHaveBeenCalledWith('scroll', expect.any(Function));
+      expect(mockContainer.removeEventListener).toHaveBeenCalledWith(
+        'scroll',
+        expect.any(Function)
+      );
     });
   });
 
@@ -91,7 +102,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       act(() => {
@@ -106,7 +117,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       act(() => {
@@ -123,7 +134,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       act(() => {
@@ -145,7 +156,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       const mouseEvent = new MouseEvent('mousedown', {
@@ -170,7 +181,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       const mouseEvent = new MouseEvent('mousedown', {
@@ -197,7 +208,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       const wheelEvent = new WheelEvent('wheel', {
@@ -221,7 +232,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       const wheelEvent = new WheelEvent('wheel', {
@@ -245,7 +256,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       const wheelEvent = new WheelEvent('wheel', {
@@ -271,7 +282,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Simulate scroll position change
@@ -291,7 +302,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Simulate arrow key presses
@@ -307,7 +318,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       act(() => {
@@ -322,7 +333,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // First scroll somewhere
@@ -344,7 +355,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Try to scroll beyond maximum
@@ -352,15 +363,19 @@ describe('useScrollPan', () => {
         result.current.scrollTo(2000, 1500); // Beyond scrollWidth/Height
       });
 
-      expect(mockContainer.scrollLeft).toBeLessThanOrEqual(mockContainer.scrollWidth - mockContainer.clientWidth);
-      expect(mockContainer.scrollTop).toBeLessThanOrEqual(mockContainer.scrollHeight - mockContainer.clientHeight);
+      expect(mockContainer.scrollLeft).toBeLessThanOrEqual(
+        mockContainer.scrollWidth - mockContainer.clientWidth
+      );
+      expect(mockContainer.scrollTop).toBeLessThanOrEqual(
+        mockContainer.scrollHeight - mockContainer.clientHeight
+      );
     });
 
     it('should not scroll to negative values', () => {
       const { result } = renderHook(() => useScrollPan());
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       act(() => {
@@ -383,7 +398,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Set container to bottom position
@@ -410,7 +425,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Set container to top position
@@ -437,7 +452,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Set container to middle position
@@ -460,7 +475,7 @@ describe('useScrollPan', () => {
       const { result } = renderHook(() => useScrollPan(mockPageBoundary));
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       // Set container to bottom position
@@ -483,7 +498,7 @@ describe('useScrollPan', () => {
       });
 
       act(() => {
-        result.current.attachContainer(mockContainer as  unknown as HTMLElement);
+        result.current.attachContainer(mockContainer as unknown as HTMLElement);
       });
 
       mockContainer.scrollTop = mockContainer.scrollHeight - mockContainer.clientHeight;

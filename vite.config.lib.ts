@@ -8,9 +8,8 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
-      include: ['src/lib'],
+      entryRoot: 'src/lib',
       outDir: 'dist',
-      exclude: ['src/demo', '**/*.test.*', '**/*.spec.*'],
     }),
   ],
   build: {

@@ -147,7 +147,7 @@ export function PDFViewer({
         role="canvas"
         style={{
           display: 'block',
-          margin: '0 auto' // Centers horizontally, allows full scroll when overflowing
+          margin: '0 auto', // Centers horizontally, allows full scroll when overflowing
         }}
       />
       {isRendering && <div>Rendering page...</div>}
