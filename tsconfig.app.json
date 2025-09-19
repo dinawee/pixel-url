@@ -15,6 +15,14 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@pixel-url/core": ["./src/lib"],
+      "@pixel-url/core/*": ["./src/lib/*"],
+      "@/*": ["./src/demo/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
