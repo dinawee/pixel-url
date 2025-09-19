@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { usePDFDocument, PDFViewer } from '@pixel-url/core';
+import { usePDFDocument, PDFViewer, PDFPageNavigation } from '@pixel-url/core';
 import './App.css';
 
 function App() {
-  const { document, isLoading, error, loadDocument, clearDocument } = usePDFDocument();
+  const { document, isLoading, error, pageCount, loadDocument, clearDocument } = usePDFDocument();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setCurrentPage(1); // Reset to first page
       await loadDocument(file);
     }
   };
@@ -17,6 +19,11 @@ function App() {
   const handleClear = () => {
     clearDocument();
     setSelectedFile(null);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -44,6 +51,21 @@ function App() {
         {selectedFile && (
           <div style={{ marginBottom: '10px' }}>
             <strong>Selected file:</strong> {selectedFile.name}
+            {pageCount > 0 && (
+              <span style={{ marginLeft: '10px', color: '#666' }}>
+                ({pageCount} page{pageCount !== 1 ? 's' : ''})
+              </span>
+            )}
+          </div>
+        )}
+
+        {document && pageCount > 1 && (
+          <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'center' }}>
+            <PDFPageNavigation
+              currentPage={currentPage}
+              totalPages={pageCount}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
 
@@ -53,7 +75,7 @@ function App() {
             isLoading={isLoading}
             error={error}
             scale={1}
-            pageNumber={1}
+            pageNumber={currentPage}
           />
         </div>
       </main>
