@@ -62,7 +62,9 @@ describe('usePDFDocument', () => {
       const { result } = renderHook(() => usePDFDocument());
       const mockFile = createMockPDFFile('test-document.pdf');
 
+      await act(async () => {
       await result.current.loadDocument(mockFile);
+      });
 
       await waitFor(() => {
         expect(result.current.document).toBe(mockPDFDocument);
@@ -143,7 +145,9 @@ describe('usePDFDocument', () => {
       const { result } = renderHook(() => usePDFDocument());
       const invalidFile = createInvalidFile('document.txt');
 
+      await act(async () => {
       await result.current.loadDocument(invalidFile);
+      });
 
       await waitFor(() => {
         expect(result.current.error).toBe('Invalid file type. Please select a PDF file.');
@@ -159,7 +163,9 @@ describe('usePDFDocument', () => {
       // Create a file larger than 50MB
       const oversizedFile = createMockPDFFile('huge.pdf', 51 * 1024 * 1024);
 
+      await act(async () => {
       await result.current.loadDocument(oversizedFile);
+      });
 
       await waitFor(() => {
         expect(result.current.error).toBe('File size exceeds 50MB limit.');
@@ -176,7 +182,9 @@ describe('usePDFDocument', () => {
       const { result } = renderHook(() => usePDFDocument());
       const testUrl = 'https://example.com/test.pdf';
 
+      await act(async () => {
       await result.current.loadDocument(testUrl);
+      });
 
       await waitFor(() => {
         expect(result.current.document).toBe(mockPDFDocument);
@@ -196,7 +204,9 @@ describe('usePDFDocument', () => {
       const { result } = renderHook(() => usePDFDocument());
       const invalidUrl = 'not-a-valid-url';
 
+      await act(async () => {
       await result.current.loadDocument(invalidUrl);
+      });
 
       await waitFor(() => {
         expect(result.current.error).toBe('Invalid URL format.');
