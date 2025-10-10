@@ -1,0 +1,12 @@
+{
+  "buildCommand": "pnpm run build:demo",
+  "outputDirectory": "dist-demo",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
