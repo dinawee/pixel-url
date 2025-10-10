@@ -198,7 +198,7 @@ function App() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '20px' }}>
+        <div style={document ? { display: 'flex', gap: '20px' } : {}}>
           <div>
             {document && (
               <div
@@ -392,6 +392,7 @@ function App() {
                   <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Image Selection</h3>
                   <p style={{ margin: '0 0 15px 0', fontSize: '14px' }}>
                     Click "Start Selection" and draw a rectangle on the PDF to extract an image.
+                    Click again to confirm selection.
                   </p>
                   <button
                     onClick={toggleSelection}
