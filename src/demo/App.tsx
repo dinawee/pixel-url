@@ -198,171 +198,196 @@ function App() {
           </div>
         )}
 
-        {document && (
-          <div
-            style={{
-              marginBottom: '15px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '10px',
-            }}
-          >
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <PDFZoomControls
-                scale={scale}
-                hasDocument={!!document}
-                onScaleChange={handleScaleChange}
-              />
-              <button
-                onClick={toggleSelection}
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <div>
+            {document && (
+              <div
                 style={{
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc',
-                  background: isSelectionActive ? '#007acc' : '#f5f5f5',
-                  color: isSelectionActive ? 'white' : '#333',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: isSelectionActive ? 'bold' : 'normal',
+                  marginBottom: '15px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '10px',
                 }}
               >
-                {isSelectionActive ? 'Cancel Selection' : 'Start Selection'}
-              </button>
-            </div>
-            {pageCount > 1 && (
-              <PDFPageNavigation
-                currentPage={currentPage}
-                totalPages={pageCount}
-                onPageChange={handlePageChange}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <PDFZoomControls
+                    scale={scale}
+                    hasDocument={!!document}
+                    onScaleChange={handleScaleChange}
+                  />
+                  <button
+                    onClick={toggleSelection}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                      background: isSelectionActive ? '#007acc' : '#f5f5f5',
+                      color: isSelectionActive ? 'white' : '#333',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: isSelectionActive ? 'bold' : 'normal',
+                    }}
+                  >
+                    {isSelectionActive ? 'Cancel Selection' : 'Start Selection'}
+                  </button>
+                </div>
+                {pageCount > 1 && (
+                  <PDFPageNavigation
+                    currentPage={currentPage}
+                    totalPages={pageCount}
+                    onPageChange={handlePageChange}
+                  />
+                )}
+              </div>
+            )}
+
+            {document && (
+              <div
+                style={{
+                  marginBottom: '10px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  color: '#666',
+                  fontFamily: 'monospace',
+                }}
+              >
+                Scroll: ({Math.round(scrollPosition.x)}, {Math.round(scrollPosition.y)})
+                {isPanning && ' • Panning...'}
+                <br />
+                <span style={{ fontSize: '10px' }}>
+                  Click and drag to pan • Mouse wheel/arrows cross pages • Keyboard: ↑↓←→ PgUp PgDn
+                  Home End
+                </span>
+              </div>
+            )}
+
+            <div
+              ref={containerRef}
+              style={{
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                overflow: isSelectionActive ? 'hidden' : 'auto', // Disable scroll when selection is active
+                width: document ? '800px' : 'auto', // Fixed width
+                height: document ? '600px' : 'auto', // Fixed height
+                margin: '0 auto', // Center the container
+                padding: document ? '0' : '10px',
+                cursor: isPanning ? 'grabbing' : document ? 'grab' : 'default',
+                userSelect: 'none', // Prevent text selection while panning
+              }}
+            >
+              <PDFViewerWithSelection
+                document={document}
+                isLoading={isLoading}
+                error={error}
+                scale={scale}
+                pageNumber={currentPage}
+                isSelectionActive={isSelectionActive}
+                onSelectionStart={handleSelectionStart}
+                onSelectionComplete={handleSelectionComplete}
+                onSelectionCancel={handleSelectionCancel}
+                selectionColor="#007acc"
               />
+            </div>
+          </div>
+
+          {/* Selection Results Display */}
+          <div style={{ width: '400px', flexShrink: 0 }}>
+            {lastSelection ? (
+              <div
+                style={{
+                  marginTop: '20px',
+                  padding: '15px',
+                  background: '#f8f9fa',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '8px',
+                  width: '100%',
+                }}
+              >
+                <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Last Selection</h3>
+                <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#6c757d' }}>
+                  <div>
+                    <strong>Coordinates:</strong> x: {lastSelection.x.toFixed(2)}, y:{' '}
+                    {lastSelection.y.toFixed(2)}
+                  </div>
+                  <div>
+                    <strong>Dimensions:</strong> {lastSelection.width.toFixed(2)} ×{' '}
+                    {lastSelection.height.toFixed(2)}
+                  </div>
+                  <div>
+                    <strong>Page:</strong> {lastSelection.pageNumber}
+                  </div>
+                  <div>
+                    <strong>Scale:</strong> {lastSelection.scale.toFixed(2)}
+                  </div>
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                  <div style={{ marginBottom: '5px', fontSize: '12px', color: '#6c757d' }}>
+                    <strong>Extracted Image:</strong>
+                  </div>
+                  {isExtracting ? (
+                    <div
+                      style={{
+                        padding: '20px',
+                        textAlign: 'center',
+                        color: '#6c757d',
+                        border: '1px dashed #ccc',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      Extracting image...
+                    </div>
+                  ) : selectionDataUrl ? (
+                    <img
+                      src={selectionDataUrl}
+                      alt="Selected area"
+                      style={{
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        maxWidth: '300px',
+                        maxHeight: '300px',
+                        display: 'block',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        padding: '20px',
+                        textAlign: 'center',
+                        color: '#6c757d',
+                        border: '1px dashed #ccc',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      No image extracted yet
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              document && (
+                <div
+                  style={{
+                    marginTop: '20px',
+                    padding: '15px',
+                    background: '#f8f9fa',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '8px',
+                    width: '100%',
+                    textAlign: 'center',
+                    color: '#6c757d',
+                  }}
+                >
+                  <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Image Selection</h3>
+                  <p style={{ margin: '0', fontSize: '14px' }}>
+                    Click "Start Selection" and draw a rectangle on the PDF to extract an image.
+                  </p>
+                </div>
+              )
             )}
           </div>
-        )}
-
-        {document && (
-          <div
-            style={{
-              marginBottom: '10px',
-              textAlign: 'center',
-              fontSize: '12px',
-              color: '#666',
-              fontFamily: 'monospace',
-            }}
-          >
-            Scroll: ({Math.round(scrollPosition.x)}, {Math.round(scrollPosition.y)})
-            {isPanning && ' • Panning...'}
-            <br />
-            <span style={{ fontSize: '10px' }}>
-              Click and drag to pan • Mouse wheel/arrows cross pages • Keyboard: ↑↓←→ PgUp PgDn Home
-              End
-            </span>
-          </div>
-        )}
-
-        <div
-          ref={containerRef}
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            overflow: isSelectionActive ? 'hidden' : 'auto', // Disable scroll when selection is active
-            width: document ? '800px' : 'auto', // Fixed width
-            height: document ? '600px' : 'auto', // Fixed height
-            margin: '0 auto', // Center the container
-            padding: document ? '0' : '10px',
-            cursor: isPanning ? 'grabbing' : document ? 'grab' : 'default',
-            userSelect: 'none', // Prevent text selection while panning
-          }}
-        >
-          <PDFViewerWithSelection
-            document={document}
-            isLoading={isLoading}
-            error={error}
-            scale={scale}
-            pageNumber={currentPage}
-            isSelectionActive={isSelectionActive}
-            onSelectionStart={handleSelectionStart}
-            onSelectionComplete={handleSelectionComplete}
-            onSelectionCancel={handleSelectionCancel}
-            selectionColor="#007acc"
-          />
         </div>
-
-        {/* Selection Results Display */}
-        {lastSelection && (
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              background: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: '8px',
-              maxWidth: '800px',
-              margin: '20px auto 0',
-            }}
-          >
-            <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Last Selection</h3>
-            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#6c757d' }}>
-              <div>
-                <strong>Coordinates:</strong> x: {lastSelection.x.toFixed(2)}, y:{' '}
-                {lastSelection.y.toFixed(2)}
-              </div>
-              <div>
-                <strong>Dimensions:</strong> {lastSelection.width.toFixed(2)} ×{' '}
-                {lastSelection.height.toFixed(2)}
-              </div>
-              <div>
-                <strong>Page:</strong> {lastSelection.pageNumber}
-              </div>
-              <div>
-                <strong>Scale:</strong> {lastSelection.scale.toFixed(2)}
-              </div>
-            </div>
-            <div style={{ marginTop: '10px' }}>
-              <div style={{ marginBottom: '5px', fontSize: '12px', color: '#6c757d' }}>
-                <strong>Extracted Image:</strong>
-              </div>
-              {isExtracting ? (
-                <div
-                  style={{
-                    padding: '20px',
-                    textAlign: 'center',
-                    color: '#6c757d',
-                    border: '1px dashed #ccc',
-                    borderRadius: '4px',
-                  }}
-                >
-                  Extracting image...
-                </div>
-              ) : selectionDataUrl ? (
-                <img
-                  src={selectionDataUrl}
-                  alt="Selected area"
-                  style={{
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    maxWidth: '300px',
-                    maxHeight: '300px',
-                    display: 'block',
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    padding: '20px',
-                    textAlign: 'center',
-                    color: '#6c757d',
-                    border: '1px dashed #ccc',
-                    borderRadius: '4px',
-                  }}
-                >
-                  No image extracted yet
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
