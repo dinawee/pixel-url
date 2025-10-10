@@ -1,17 +1,28 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  usePDFDocument,
   PDFPageNavigation,
   PDFZoomControls,
   useScrollPan,
-  PDFViewerWithSelection,
   extractSelectionImage,
 } from '@pixel-url/core';
 import type { NormalizedSelection } from '@pixel-url/core';
+import { useReactPDFDocument } from '../lib/hooks/useReactPDFDocument';
+import { ReactPDFViewerWithSelection } from '../lib/components/PDFViewerWithSelection/ReactPDFViewerWithSelection';
 import './App.css';
 
 function App() {
-  const { document, isLoading, error, pageCount, loadDocument, clearDocument } = usePDFDocument();
+  // react-pdf implementation
+  const {
+    file,
+    isLoading,
+    error,
+    pageCount,
+    loadDocument,
+    clearDocument,
+    handleDocumentLoadSuccess,
+    handleDocumentLoadError,
+  } = useReactPDFDocument();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1);
@@ -162,7 +173,6 @@ function App() {
       }, 100);
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scale, centerContent]); // no centering on doc change
 
   return (
@@ -198,9 +208,9 @@ function App() {
           </div>
         )}
 
-        <div style={document ? { display: 'flex', gap: '20px' } : {}}>
+        <div style={file ? { display: 'flex', gap: '20px' } : {}}>
           <div>
-            {document && (
+            {file && (
               <div
                 style={{
                   marginBottom: '15px',
@@ -214,7 +224,7 @@ function App() {
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <PDFZoomControls
                     scale={scale}
-                    hasDocument={!!document}
+                    hasDocument={!!file}
                     onScaleChange={handleScaleChange}
                   />
                 </div>
@@ -228,7 +238,7 @@ function App() {
               </div>
             )}
 
-            {document && (
+            {file && (
               <div
                 style={{
                   marginBottom: '10px',
@@ -254,16 +264,16 @@ function App() {
                 border: '1px solid #ccc',
                 borderRadius: '8px',
                 overflow: isSelectionActive ? 'hidden' : 'auto', // Disable scroll when selection is active
-                width: document ? '800px' : 'auto', // Fixed width
-                height: document ? '600px' : 'auto', // Fixed height
+                width: file ? '800px' : 'auto', // Fixed width
+                height: file ? '600px' : 'auto', // Fixed height
                 margin: '0 auto', // Center the container
-                padding: document ? '0' : '10px',
-                cursor: isPanning ? 'grabbing' : document ? 'grab' : 'default',
+                padding: file ? '0' : '10px',
+                cursor: isPanning ? 'grabbing' : file ? 'grab' : 'default',
                 userSelect: 'none', // Prevent text selection while panning
               }}
             >
-              <PDFViewerWithSelection
-                document={document}
+              <ReactPDFViewerWithSelection
+                file={file}
                 isLoading={isLoading}
                 error={error}
                 scale={scale}
@@ -272,6 +282,8 @@ function App() {
                 onSelectionStart={handleSelectionStart}
                 onSelectionComplete={handleSelectionComplete}
                 onSelectionCancel={handleSelectionCancel}
+                onDocumentLoadSuccess={handleDocumentLoadSuccess}
+                onDocumentLoadError={handleDocumentLoadError}
                 selectionColor="#007acc"
               />
             </div>
@@ -376,7 +388,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              document && (
+              file && (
                 <div
                   style={{
                     marginTop: '20px',
