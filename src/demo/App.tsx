@@ -217,21 +217,6 @@ function App() {
                     hasDocument={!!document}
                     onScaleChange={handleScaleChange}
                   />
-                  <button
-                    onClick={toggleSelection}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      border: '1px solid #ccc',
-                      background: isSelectionActive ? '#007acc' : '#f5f5f5',
-                      color: isSelectionActive ? 'white' : '#333',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: isSelectionActive ? 'bold' : 'normal',
-                    }}
-                  >
-                    {isSelectionActive ? 'Cancel Selection' : 'Start Selection'}
-                  </button>
                 </div>
                 {pageCount > 1 && (
                   <PDFPageNavigation
@@ -305,7 +290,31 @@ function App() {
                   width: '100%',
                 }}
               >
-                <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Last Selection</h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '10px',
+                  }}
+                >
+                  <h3 style={{ margin: '0', color: '#495057' }}>Last Selection</h3>
+                  <button
+                    onClick={toggleSelection}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                      background: isSelectionActive ? '#007acc' : '#f5f5f5',
+                      color: isSelectionActive ? 'white' : '#333',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: isSelectionActive ? 'bold' : 'normal',
+                    }}
+                  >
+                    {isSelectionActive ? 'Cancel' : 'New Selection'}
+                  </button>
+                </div>
                 <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#6c757d' }}>
                   <div>
                     <strong>Coordinates:</strong> x: {lastSelection.x.toFixed(2)}, y:{' '}
@@ -348,6 +357,7 @@ function App() {
                         maxWidth: '300px',
                         maxHeight: '300px',
                         display: 'block',
+                        margin: 'auto',
                       }}
                     />
                   ) : (
@@ -380,9 +390,24 @@ function App() {
                   }}
                 >
                   <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Image Selection</h3>
-                  <p style={{ margin: '0', fontSize: '14px' }}>
+                  <p style={{ margin: '0 0 15px 0', fontSize: '14px' }}>
                     Click "Start Selection" and draw a rectangle on the PDF to extract an image.
                   </p>
+                  <button
+                    onClick={toggleSelection}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                      background: isSelectionActive ? '#007acc' : '#f5f5f5',
+                      color: isSelectionActive ? 'white' : '#333',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: isSelectionActive ? 'bold' : 'normal',
+                    }}
+                  >
+                    {isSelectionActive ? 'Cancel Selection' : 'Start Selection'}
+                  </button>
                 </div>
               )
             )}
