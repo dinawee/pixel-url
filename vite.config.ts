@@ -6,6 +6,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   root: 'src/demo',
+  publicDir: '../../public', // Point to the public directory at project root
   build: {
     outDir: '../../dist-demo',
     emptyOutDir: true,
