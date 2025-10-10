@@ -17,6 +17,7 @@ function App() {
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollToRef = useRef<((x: number, y: number) => void) | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Selection state
   const [isSelectionActive, setIsSelectionActive] = useState(false);
@@ -77,6 +78,10 @@ function App() {
     setLastSelection(null);
     setSelectionDataUrl(null);
     setIsExtracting(false);
+    // Clear the file input value to allow re-selecting the same file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handlePageChange = (page: number) => {
@@ -169,6 +174,7 @@ function App() {
       <main style={{ padding: '20px' }}>
         <div style={{ marginBottom: '20px' }}>
           <input
+            ref={fileInputRef}
             type="file"
             accept=".pdf"
             onChange={handleFileChange}
