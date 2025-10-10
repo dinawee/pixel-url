@@ -1,173 +1,71 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { PDFPageNavigation, PDFZoomControls, useScrollPan, extractSelectionImage } from '../lib';
+import { useState, useRef } from 'react';
+import { PixelUrl } from '../lib';
 import type { NormalizedSelection } from '../lib';
-import { useReactPDFDocument } from '../lib/hooks/useReactPDFDocument';
-import { ReactPDFViewerWithSelection } from '../lib/components/PDFViewerWithSelection/ReactPDFViewerWithSelection';
 import './App.css';
 
 function App() {
-  const {
-    file,
-    isLoading,
-    error,
-    pageCount,
-    loadDocument,
-    clearDocument,
-    handleDocumentLoadSuccess,
-    handleDocumentLoadError,
-  } = useReactPDFDocument();
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollToRef = useRef<((x: number, y: number) => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Selection state
   const [isSelectionActive, setIsSelectionActive] = useState(false);
   const [lastSelection, setLastSelection] = useState<NormalizedSelection | null>(null);
   const [selectionDataUrl, setSelectionDataUrl] = useState<string | null>(null);
-  const [isExtracting, setIsExtracting] = useState(false);
-
-  const handlePageBoundary = useCallback(
-    (direction: 'next' | 'prev') => {
-      if (direction === 'next' && currentPage < pageCount) {
-        setCurrentPage(currentPage + 1);
-        // Reset scroll to top of new page after a brief delay for rendering
-        setTimeout(() => {
-          scrollToRef.current?.(0, 0);
-        }, 50);
-      } else if (direction === 'prev' && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-        // Reset scroll to bottom of new page after a brief delay for rendering
-        setTimeout(() => {
-          if (containerRef.current && scrollToRef.current) {
-            const maxScrollTop =
-              containerRef.current.scrollHeight - containerRef.current.clientHeight;
-            scrollToRef.current(0, maxScrollTop);
-          }
-        }, 50);
-      }
-    },
-    [currentPage, pageCount]
-  );
-
-  const { isPanning, scrollPosition, attachContainer, scrollTo, centerContent } = useScrollPan(
-    handlePageBoundary,
-    { disabled: isSelectionActive }
-  );
-
-  // Store scrollTo function in ref so handlePageBoundary can access it
-  useEffect(() => {
-    scrollToRef.current = scrollTo;
-  }, [scrollTo]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setCurrentPage(1); // Reset to first page
-      setScale(1); // Reset zoom
-      await loadDocument(file);
+      // Clear previous selection when new file is loaded
+      setIsSelectionActive(false);
+      setLastSelection(null);
+      setSelectionDataUrl(null);
     }
   };
 
   const handleClear = () => {
-    clearDocument();
     setSelectedFile(null);
-    setCurrentPage(1);
-    setScale(1);
-    // Clear selection state and image display
     setIsSelectionActive(false);
     setLastSelection(null);
     setSelectionDataUrl(null);
-    setIsExtracting(false);
     // Clear the file input value to allow re-selecting the same file
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  // Simplified selection handlers
+  const handleSelectionStart = () => {
+    console.log('Selection started');
   };
 
-  const handleScaleChange = useCallback((newScale: number | 'fit-width') => {
-    if (newScale === 'fit-width') {
-      // For now, set a reasonable fit-width scale
-      // In a real implementation, this would calculate based on container width
-      setScale(1.2);
-    } else {
-      setScale(newScale);
-    }
-  }, []);
+  const handleSelectionComplete = ({
+    image,
+    coordinates,
+  }: {
+    image: string | null;
+    coordinates: NormalizedSelection;
+  }) => {
+    console.log('Selection completed:', coordinates);
+    console.log('Extracted image:', image ? 'Success' : 'Failed');
 
-  // Selection handlers
-  const handleSelectionStart = useCallback(() => {
-    console.log('Selection started');
-  }, []);
-
-  const handleSelectionComplete = useCallback((selection: NormalizedSelection) => {
-    console.log('Selection completed:', selection);
-    setLastSelection(selection);
+    setLastSelection(coordinates);
+    setSelectionDataUrl(image);
     setIsSelectionActive(false);
-    setIsExtracting(true);
+  };
 
-    // Extract the actual image from the PDF canvas
-    if (containerRef.current) {
-      try {
-        const imageDataUrl = extractSelectionImage(containerRef.current, selection);
-        if (imageDataUrl) {
-          setSelectionDataUrl(imageDataUrl);
-          console.log('Successfully extracted image from selection');
-        } else {
-          console.warn('Failed to extract image from selection');
-          // Fallback to placeholder
-          setSelectionDataUrl(
-            `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`
-          );
-        }
-      } catch (error) {
-        console.error('Error extracting selection image:', error);
-        // Fallback to placeholder
-        setSelectionDataUrl(
-          `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`
-        );
-      }
-    }
-
-    setIsExtracting(false);
-  }, []);
-
-  const handleSelectionCancel = useCallback(() => {
+  const handleSelectionCancel = () => {
     console.log('Selection cancelled');
     setIsSelectionActive(false);
-  }, []);
+  };
 
-  const toggleSelection = useCallback(() => {
+  const toggleSelection = () => {
     setIsSelectionActive(prev => !prev);
     if (!isSelectionActive) {
       setLastSelection(null);
       setSelectionDataUrl(null);
     }
-  }, [isSelectionActive]);
-
-  // Attach container to scroll/pan hook
-  useEffect(() => {
-    attachContainer(containerRef.current);
-  }, [attachContainer]);
-
-  // Center content only on zoom changes, not initial load or page changes
-  useEffect(() => {
-    if (document && scale !== 1) {
-      // Only center when zoomed (not at 100%)
-      const timer = setTimeout(() => {
-        centerContent();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [scale, centerContent]); // no centering on doc change
+  };
 
   return (
     <div className="App">
@@ -194,93 +92,19 @@ function App() {
         {selectedFile && (
           <div style={{ marginBottom: '10px' }}>
             <strong>Selected file:</strong> {selectedFile.name}
-            {pageCount > 0 && (
-              <span style={{ marginLeft: '10px', color: '#666' }}>
-                ({pageCount} page{pageCount !== 1 ? 's' : ''})
-              </span>
-            )}
           </div>
         )}
 
-        <div style={file ? { display: 'flex', gap: '20px' } : {}}>
+        <div style={selectedFile ? { display: 'flex', gap: '20px' } : {}}>
           <div>
-            {file && (
-              <div
-                style={{
-                  marginBottom: '15px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '10px',
-                }}
-              >
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <PDFZoomControls
-                    scale={scale}
-                    hasDocument={!!file}
-                    onScaleChange={handleScaleChange}
-                  />
-                </div>
-                {pageCount > 1 && (
-                  <PDFPageNavigation
-                    currentPage={currentPage}
-                    totalPages={pageCount}
-                    onPageChange={handlePageChange}
-                  />
-                )}
-              </div>
-            )}
-
-            {file && (
-              <div
-                style={{
-                  marginBottom: '10px',
-                  textAlign: 'center',
-                  fontSize: '12px',
-                  color: '#666',
-                  fontFamily: 'monospace',
-                }}
-              >
-                Scroll: ({Math.round(scrollPosition.x)}, {Math.round(scrollPosition.y)})
-                {isPanning && ' • Panning...'}
-                <br />
-                <span style={{ fontSize: '10px' }}>
-                  Click and drag to pan • Mouse wheel/arrows cross pages • Keyboard: ↑↓←→ PgUp PgDn
-                  Home End
-                </span>
-              </div>
-            )}
-
-            <div
-              ref={containerRef}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                overflow: isSelectionActive ? 'hidden' : 'auto', // Disable scroll when selection is active
-                width: file ? '800px' : 'auto', // Fixed width
-                height: file ? '600px' : 'auto', // Fixed height
-                margin: '0 auto', // Center the container
-                padding: file ? '0' : '10px',
-                cursor: isPanning ? 'grabbing' : file ? 'grab' : 'default',
-                userSelect: 'none', // Prevent text selection while panning
-              }}
-            >
-              <ReactPDFViewerWithSelection
-                file={file}
-                isLoading={isLoading}
-                error={error}
-                scale={scale}
-                pageNumber={currentPage}
-                isSelectionActive={isSelectionActive}
-                onSelectionStart={handleSelectionStart}
-                onSelectionComplete={handleSelectionComplete}
-                onSelectionCancel={handleSelectionCancel}
-                onDocumentLoadSuccess={handleDocumentLoadSuccess}
-                onDocumentLoadError={handleDocumentLoadError}
-                selectionColor="#007acc"
-              />
-            </div>
+            <PixelUrl
+              file={selectedFile}
+              isSelectionActive={isSelectionActive}
+              onSelectionStart={handleSelectionStart}
+              onSelectionComplete={handleSelectionComplete}
+              onSelectionCancel={handleSelectionCancel}
+              selectionColor="#007acc"
+            />
           </div>
 
           {/* Selection Results Display */}
@@ -341,19 +165,7 @@ function App() {
                   <div style={{ marginBottom: '5px', fontSize: '12px', color: '#6c757d' }}>
                     <strong>Extracted Image:</strong>
                   </div>
-                  {isExtracting ? (
-                    <div
-                      style={{
-                        padding: '20px',
-                        textAlign: 'center',
-                        color: '#6c757d',
-                        border: '1px dashed #ccc',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      Extracting image...
-                    </div>
-                  ) : selectionDataUrl ? (
+                  {selectionDataUrl ? (
                     <img
                       src={selectionDataUrl}
                       alt="Selected area"
@@ -382,7 +194,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              file && (
+              selectedFile && (
                 <div
                   style={{
                     marginTop: '20px',
