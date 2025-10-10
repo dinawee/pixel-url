@@ -72,6 +72,11 @@ function App() {
     setSelectedFile(null);
     setCurrentPage(1);
     setScale(1);
+    // Clear selection state and image display
+    setIsSelectionActive(false);
+    setLastSelection(null);
+    setSelectionDataUrl(null);
+    setIsExtracting(false);
   };
 
   const handlePageChange = (page: number) => {
