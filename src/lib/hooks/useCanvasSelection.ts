@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getSelectionBounds, screenToPDF } from '../utils/coordinateTransform';
 import type { Point, PDFViewport, NormalizedSelection } from '../utils/coordinateTransform';
 
@@ -51,6 +51,14 @@ export const useCanvasSelection = ({
   const [startPoint, setStartPoint] = useState<Point | null>(null);
   const [endPoint, setEndPoint] = useState<Point | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<NormalizedSelection | null>(null);
+
+  // Clear selection state when page changes
+  useEffect(() => {
+    setIsSelecting(false);
+    setStartPoint(null);
+    setEndPoint(null);
+    setSelectionBounds(null);
+  }, [pageNumber]);
 
   // Compute current selection from start and end points
   const currentSelection =

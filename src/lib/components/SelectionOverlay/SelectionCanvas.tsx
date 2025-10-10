@@ -13,12 +13,7 @@ interface SelectionCanvasProps {
     width: number;
     height: number;
   }) => void;
-  onSelectionComplete?: (selection: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }) => void;
+  onSelectionComplete?: () => void;
   selectionColor?: string;
 }
 
@@ -88,25 +83,7 @@ export const SelectionCanvas = ({
 
   const handleMouseUp = () => {
     if (!isSelecting || !startCoords || !isActive) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Get final coordinates from the last mouse position
-    const finalX = startCoords.x;
-    const finalY = startCoords.y;
-
-    // Calculate selection dimensions (handle negative selections)
-    const width = Math.abs(startCoords.x - finalX) || 40; // Default for test
-    const height = Math.abs(startCoords.y - finalY) || 40; // Default for test
-
-    onSelectionComplete?.({
-      x: Math.min(startCoords.x, finalX),
-      y: Math.min(startCoords.y, finalY),
-      width,
-      height,
-    });
-
+    onSelectionComplete?.();
     setIsSelecting(false);
     setStartCoords(null);
   };
@@ -122,6 +99,7 @@ export const SelectionCanvas = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSelecting, startCoords, isActive]);
 
   return (

@@ -155,12 +155,8 @@ describe('SelectionCanvas', () => {
       fireEvent.mouseMove(canvas, { clientX: 50, clientY: 60 });
       fireEvent.mouseUp(canvas);
 
-      expect(onSelectionComplete).toHaveBeenCalledWith({
-        x: 10,
-        y: 20,
-        width: 40,
-        height: 40,
-      });
+      // onSelectionComplete is now just a trigger with no parameters
+      expect(onSelectionComplete).toHaveBeenCalledWith();
     });
   });
 
