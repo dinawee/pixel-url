@@ -8,6 +8,7 @@ import {
   extractSelectionImage,
 } from '@pixel-url/core';
 import type { NormalizedSelection } from '@pixel-url/core';
+import { ReactPDFProof } from '../lib/components/ReactPDFProof';
 import './App.css';
 
 function App() {
@@ -414,6 +415,14 @@ function App() {
             )}
           </div>
         </div>
+
+        {/* react-pdf Proof of Concept - Only show when we have a file to test */}
+        {selectedFile && (
+          <div style={{ marginTop: '40px', padding: '20px', borderTop: '2px solid #eee' }}>
+            <h2>react-pdf Migration Proof of Concept</h2>
+            <ReactPDFProof file={selectedFile} />
+          </div>
+        )}
       </main>
     </div>
   );
