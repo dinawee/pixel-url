@@ -1,11 +1,11 @@
 // Main library export file - what gets published to npm
 export { PDFSelectionTool } from './components/PDFSelectionTool';
-export { PDFViewer } from './components/PDFViewer';
+export { ReactPDFViewer } from './components/PDFViewer';
 export { PDFPageNavigation } from './components/PDFPageNavigation';
 export { PDFZoomControls } from './components/PDFZoomControls';
-export { PDFViewerWithSelection } from './components/PDFViewerWithSelection';
+export { ReactPDFViewerWithSelection } from './components/PDFViewerWithSelection';
 export { SelectionCanvas } from './components/SelectionOverlay';
-export { usePDFDocument } from './hooks/usePDFDocument';
+export { useReactPDFDocument } from './hooks/useReactPDFDocument';
 export { useScrollPan } from './hooks/useScrollPan';
 export { useCanvasSelection } from './hooks/useCanvasSelection';
 
@@ -31,9 +31,13 @@ export {
 
 // Types
 export type { PDFSelectionToolProps, SelectionResult, SelectionCoordinates } from './types';
-export type { PDFDocument, UsePDFDocumentReturn } from './types/internal';
+export type {
+  ReactPDFDocumentResult,
+  ReactPDFViewerProps,
+  ReactPDFViewerRef,
+  ReactPDFViewerWithSelectionProps,
+} from './types/react-pdf';
 export type { ScrollPosition, UseScrollPanReturn } from './hooks/useScrollPan';
-export type { PDFViewerWithSelectionProps } from './components/PDFViewerWithSelection';
 export type {
   UseCanvasSelectionProps,
   UseCanvasSelectionReturn,

@@ -1,2 +1,2 @@
-export { PDFViewerWithSelection } from './PDFViewerWithSelection';
-export type { PDFViewerWithSelectionProps } from './PDFViewerWithSelection';
+export { ReactPDFViewerWithSelection } from './ReactPDFViewerWithSelection';
+export type { ReactPDFViewerWithSelectionProps } from './ReactPDFViewerWithSelection';

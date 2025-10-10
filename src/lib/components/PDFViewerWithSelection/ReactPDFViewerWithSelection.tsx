@@ -1,12 +1,14 @@
 import { useRef, useEffect, useState } from 'react';
-import { PDFViewer } from '../PDFViewer';
+import { Document } from 'react-pdf';
+import { ReactPDFViewer } from '../PDFViewer/ReactPDFViewer';
+import type { ReactPDFViewerRef } from '../PDFViewer/ReactPDFViewer';
 import { SelectionCanvas } from '../SelectionOverlay';
 import { useCanvasSelection } from '../../hooks/useCanvasSelection';
 import type { PDFViewport, NormalizedSelection } from '../../utils/coordinateTransform';
-import type { PDFDocument } from '../../types/internal';
+import '../../config/react-pdf-setup';
 
-export interface PDFViewerWithSelectionProps {
-  document?: PDFDocument | null;
+export interface ReactPDFViewerWithSelectionProps {
+  file?: File | string | null;
   pageNumber?: number;
   scale?: number;
   isLoading?: boolean;
@@ -15,13 +17,15 @@ export interface PDFViewerWithSelectionProps {
   onSelectionComplete?: (selection: NormalizedSelection) => void;
   onSelectionStart?: () => void;
   onSelectionCancel?: () => void;
+  onDocumentLoadSuccess?: (result: { numPages: number }) => void;
+  onDocumentLoadError?: (error: Error) => void;
   selectionColor?: string;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function PDFViewerWithSelection({
-  document,
+export function ReactPDFViewerWithSelection({
+  file,
   pageNumber = 1,
   scale = 1,
   isLoading = false,
@@ -30,48 +34,54 @@ export function PDFViewerWithSelection({
   onSelectionComplete,
   onSelectionStart,
   onSelectionCancel,
+  onDocumentLoadSuccess,
+  onDocumentLoadError,
   selectionColor = '#0066cc',
   className,
   style,
-}: PDFViewerWithSelectionProps) {
+}: ReactPDFViewerWithSelectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<ReactPDFViewerRef>(null);
   const [viewport, setViewport] = useState<PDFViewport | null>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
+  const [pageLoaded, setPageLoaded] = useState(false);
 
-  // Create viewport from PDF document and scale
-  useEffect(() => {
-    if (!document) {
-      setViewport(null);
-      return;
+  // Create viewport when page renders successfully
+  const handlePageRenderSuccess = () => {
+    setPageLoaded(true);
+
+    // Get canvas to determine dimensions
+    const canvas = viewerRef.current?.getCanvas();
+    if (canvas) {
+      const viewport: PDFViewport = {
+        width: canvas.width,
+        height: canvas.height,
+        scale,
+        transform: [scale, 0, 0, scale, 0, 0], // Simple transform for react-pdf
+        offsetX: 0,
+        offsetY: 0,
+      };
+
+      setViewport(viewport);
+      setCanvasDimensions({
+        width: canvas.width,
+        height: canvas.height,
+      });
     }
+  };
 
-    const createViewport = async () => {
-      try {
-        const page = await document.getPage(pageNumber);
-        const pdfViewport = page.getViewport({ scale });
+  const handlePageRenderError = (error: Error) => {
+    console.error('Page render error:', error);
+    setPageLoaded(false);
+    setViewport(null);
+  };
 
-        const viewport: PDFViewport = {
-          width: pdfViewport.width,
-          height: pdfViewport.height,
-          scale,
-          transform: pdfViewport.transform,
-          offsetX: 0,
-          offsetY: 0,
-        };
-
-        setViewport(viewport);
-        setCanvasDimensions({
-          width: Math.floor(pdfViewport.width),
-          height: Math.floor(pdfViewport.height),
-        });
-      } catch (err) {
-        console.error('Failed to create viewport:', err);
-        setViewport(null);
-      }
-    };
-
-    createViewport();
-  }, [document, pageNumber, scale]);
+  // Reset state when file changes
+  useEffect(() => {
+    setPageLoaded(false);
+    setViewport(null);
+    setCanvasDimensions({ width: 0, height: 0 });
+  }, [file, pageNumber, scale]);
 
   // Selection logic using our custom hook
   const selection = useCanvasSelection({
@@ -109,6 +119,22 @@ export function PDFViewerWithSelection({
     selection.completeSelection();
   };
 
+  // Don't render Document wrapper if no file
+  if (!file) {
+    return (
+      <div className={className} style={style}>
+        <ReactPDFViewer
+          file={file}
+          pageNumber={pageNumber}
+          scale={scale}
+          isLoading={isLoading}
+          error={error}
+          ref={viewerRef}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -119,17 +145,29 @@ export function PDFViewerWithSelection({
         ...style,
       }}
     >
-      {/* PDF Viewer Component */}
-      <PDFViewer
-        document={document}
-        pageNumber={pageNumber}
-        scale={scale}
-        isLoading={isLoading}
-        error={error}
-      />
+      {/* react-pdf Document wrapper */}
+      <Document
+        file={file}
+        onLoadSuccess={onDocumentLoadSuccess}
+        onLoadError={onDocumentLoadError}
+        loading={<div>Loading PDF...</div>}
+        error={<div>Error loading PDF</div>}
+      >
+        {/* PDF Viewer Component with Page */}
+        <ReactPDFViewer
+          file={file}
+          pageNumber={pageNumber}
+          scale={scale}
+          isLoading={isLoading}
+          error={error}
+          ref={viewerRef}
+          onRenderSuccess={handlePageRenderSuccess}
+          onRenderError={handlePageRenderError}
+        />
+      </Document>
 
       {/* Selection Canvas Overlay */}
-      {viewport && !isLoading && !error && isSelectionActive && (
+      {viewport && pageLoaded && !isLoading && !error && isSelectionActive && (
         <SelectionCanvas
           width={canvasDimensions.width}
           height={canvasDimensions.height}
