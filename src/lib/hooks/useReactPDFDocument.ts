@@ -1,14 +1,5 @@
 import { useState, useCallback } from 'react';
-
-// Types that match our existing API
-export interface ReactPDFDocumentResult {
-  file: File | string | null;
-  isLoading: boolean;
-  error: string | null;
-  pageCount: number;
-  loadDocument: (source: File | string) => Promise<void>;
-  clearDocument: () => void;
-}
+import type { ReactPDFDocumentResult } from '../types/react-pdf';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
@@ -63,7 +54,6 @@ export const useReactPDFDocument = (): ReactPDFDocumentResult => {
         }
         setFile(source);
       } else {
-        // Handle File
         const validationError = validateFile(source);
         if (validationError) {
           throw new Error(validationError);
@@ -105,11 +95,7 @@ export const useReactPDFDocument = (): ReactPDFDocumentResult => {
     pageCount,
     loadDocument,
     clearDocument,
-    // Export these for the Document component to use
     handleDocumentLoadSuccess,
     handleDocumentLoadError,
-  } as ReactPDFDocumentResult & {
-    handleDocumentLoadSuccess: (result: { numPages: number }) => void;
-    handleDocumentLoadError: (error: Error) => void;
   };
 };

@@ -1,17 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  PDFPageNavigation,
-  PDFZoomControls,
-  useScrollPan,
-  extractSelectionImage,
-} from '@pixel-url/core';
-import type { NormalizedSelection } from '@pixel-url/core';
+import { PDFPageNavigation, PDFZoomControls, useScrollPan, extractSelectionImage } from '../lib';
+import type { NormalizedSelection } from '../lib';
 import { useReactPDFDocument } from '../lib/hooks/useReactPDFDocument';
 import { ReactPDFViewerWithSelection } from '../lib/components/PDFViewerWithSelection/ReactPDFViewerWithSelection';
 import './App.css';
 
 function App() {
-  // react-pdf implementation
   const {
     file,
     isLoading,
