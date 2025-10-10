@@ -17,9 +17,18 @@ export interface UseScrollPanReturn {
 const SCROLL_STEP = 50;
 const PAGE_SCROLL_FACTOR = 0.8;
 
+interface UseScrollPanOptions {
+  disabled?: boolean;
+}
+
 export const useScrollPan = (
-  onPageBoundary?: (direction: 'next' | 'prev') => void
+  onPageBoundary?: (direction: 'next' | 'prev') => void,
+  options: UseScrollPanOptions = {}
 ): UseScrollPanReturn => {
+  const { disabled = false } = options;
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+
   const [isPanning, setIsPanning] = useState(false);
   const [scrollPosition, setScrollPosition] = useState<ScrollPosition>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLElement | null>(null);
@@ -78,6 +87,7 @@ export const useScrollPan = (
 
   const handleMouseDown = useCallback(
     (event: MouseEvent) => {
+      if (disabledRef.current) return;
       // Only handle left mouse button
       if (event.button !== 0) return;
 
@@ -118,6 +128,7 @@ export const useScrollPan = (
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
+      if (disabledRef.current) return;
       event.preventDefault();
 
       const container = containerRef.current;
@@ -149,6 +160,7 @@ export const useScrollPan = (
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      if (disabledRef.current) return;
       const container = containerRef.current;
       if (!container) return;
 

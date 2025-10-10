@@ -1,11 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   usePDFDocument,
-  PDFViewer,
   PDFPageNavigation,
   PDFZoomControls,
   useScrollPan,
+  PDFViewerWithSelection,
+  extractSelectionImage,
 } from '@pixel-url/core';
+import type { NormalizedSelection } from '@pixel-url/core';
 import './App.css';
 
 function App() {
@@ -15,6 +17,12 @@ function App() {
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollToRef = useRef<((x: number, y: number) => void) | null>(null);
+
+  // Selection state
+  const [isSelectionActive, setIsSelectionActive] = useState(false);
+  const [lastSelection, setLastSelection] = useState<NormalizedSelection | null>(null);
+  const [selectionDataUrl, setSelectionDataUrl] = useState<string | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const handlePageBoundary = useCallback(
     (direction: 'next' | 'prev') => {
@@ -39,8 +47,10 @@ function App() {
     [currentPage, pageCount]
   );
 
-  const { isPanning, scrollPosition, attachContainer, scrollTo, centerContent } =
-    useScrollPan(handlePageBoundary);
+  const { isPanning, scrollPosition, attachContainer, scrollTo, centerContent } = useScrollPan(
+    handlePageBoundary,
+    { disabled: isSelectionActive }
+  );
 
   // Store scrollTo function in ref so handlePageBoundary can access it
   useEffect(() => {
@@ -78,6 +88,56 @@ function App() {
     }
   }, []);
 
+  // Selection handlers
+  const handleSelectionStart = useCallback(() => {
+    console.log('Selection started');
+  }, []);
+
+  const handleSelectionComplete = useCallback((selection: NormalizedSelection) => {
+    console.log('Selection completed:', selection);
+    setLastSelection(selection);
+    setIsSelectionActive(false);
+    setIsExtracting(true);
+
+    // Extract the actual image from the PDF canvas
+    if (containerRef.current) {
+      try {
+        const imageDataUrl = extractSelectionImage(containerRef.current, selection);
+        if (imageDataUrl) {
+          setSelectionDataUrl(imageDataUrl);
+          console.log('Successfully extracted image from selection');
+        } else {
+          console.warn('Failed to extract image from selection');
+          // Fallback to placeholder
+          setSelectionDataUrl(
+            `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`
+          );
+        }
+      } catch (error) {
+        console.error('Error extracting selection image:', error);
+        // Fallback to placeholder
+        setSelectionDataUrl(
+          `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`
+        );
+      }
+    }
+
+    setIsExtracting(false);
+  }, []);
+
+  const handleSelectionCancel = useCallback(() => {
+    console.log('Selection cancelled');
+    setIsSelectionActive(false);
+  }, []);
+
+  const toggleSelection = useCallback(() => {
+    setIsSelectionActive(prev => !prev);
+    if (!isSelectionActive) {
+      setLastSelection(null);
+      setSelectionDataUrl(null);
+    }
+  }, [isSelectionActive]);
+
   // Attach container to scroll/pan hook
   useEffect(() => {
     attachContainer(containerRef.current);
@@ -99,7 +159,6 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Pixel URL - PDF Selection Tool Demo</h1>
-        <p>Upload a PDF to test the viewer component</p>
       </header>
 
       <main style={{ padding: '20px' }}>
@@ -139,11 +198,28 @@ function App() {
               gap: '10px',
             }}
           >
-            <PDFZoomControls
-              scale={scale}
-              hasDocument={!!document}
-              onScaleChange={handleScaleChange}
-            />
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <PDFZoomControls
+                scale={scale}
+                hasDocument={!!document}
+                onScaleChange={handleScaleChange}
+              />
+              <button
+                onClick={toggleSelection}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  background: isSelectionActive ? '#007acc' : '#f5f5f5',
+                  color: isSelectionActive ? 'white' : '#333',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: isSelectionActive ? 'bold' : 'normal',
+                }}
+              >
+                {isSelectionActive ? 'Cancel Selection' : 'Start Selection'}
+              </button>
+            </div>
             {pageCount > 1 && (
               <PDFPageNavigation
                 currentPage={currentPage}
@@ -179,7 +255,7 @@ function App() {
           style={{
             border: '1px solid #ccc',
             borderRadius: '8px',
-            overflow: 'auto',
+            overflow: isSelectionActive ? 'hidden' : 'auto', // Disable scroll when selection is active
             width: document ? '800px' : 'auto', // Fixed width
             height: document ? '600px' : 'auto', // Fixed height
             margin: '0 auto', // Center the container
@@ -188,14 +264,94 @@ function App() {
             userSelect: 'none', // Prevent text selection while panning
           }}
         >
-          <PDFViewer
+          <PDFViewerWithSelection
             document={document}
             isLoading={isLoading}
             error={error}
             scale={scale}
             pageNumber={currentPage}
+            isSelectionActive={isSelectionActive}
+            onSelectionStart={handleSelectionStart}
+            onSelectionComplete={handleSelectionComplete}
+            onSelectionCancel={handleSelectionCancel}
+            selectionColor="#007acc"
           />
         </div>
+
+        {/* Selection Results Display */}
+        {lastSelection && (
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: '#f8f9fa',
+              border: '1px solid #dee2e6',
+              borderRadius: '8px',
+              maxWidth: '800px',
+              margin: '20px auto 0',
+            }}
+          >
+            <h3 style={{ margin: '0 0 10px 0', color: '#495057' }}>Last Selection</h3>
+            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#6c757d' }}>
+              <div>
+                <strong>Coordinates:</strong> x: {lastSelection.x.toFixed(2)}, y:{' '}
+                {lastSelection.y.toFixed(2)}
+              </div>
+              <div>
+                <strong>Dimensions:</strong> {lastSelection.width.toFixed(2)} ×{' '}
+                {lastSelection.height.toFixed(2)}
+              </div>
+              <div>
+                <strong>Page:</strong> {lastSelection.pageNumber}
+              </div>
+              <div>
+                <strong>Scale:</strong> {lastSelection.scale.toFixed(2)}
+              </div>
+            </div>
+            <div style={{ marginTop: '10px' }}>
+              <div style={{ marginBottom: '5px', fontSize: '12px', color: '#6c757d' }}>
+                <strong>Extracted Image:</strong>
+              </div>
+              {isExtracting ? (
+                <div
+                  style={{
+                    padding: '20px',
+                    textAlign: 'center',
+                    color: '#6c757d',
+                    border: '1px dashed #ccc',
+                    borderRadius: '4px',
+                  }}
+                >
+                  Extracting image...
+                </div>
+              ) : selectionDataUrl ? (
+                <img
+                  src={selectionDataUrl}
+                  alt="Selected area"
+                  style={{
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    maxWidth: '300px',
+                    maxHeight: '300px',
+                    display: 'block',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    padding: '20px',
+                    textAlign: 'center',
+                    color: '#6c757d',
+                    border: '1px dashed #ccc',
+                    borderRadius: '4px',
+                  }}
+                >
+                  No image extracted yet
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
