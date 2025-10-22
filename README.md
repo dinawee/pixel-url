@@ -68,15 +68,10 @@ onSelectionComplete: (result: {
 
 #### Keyboard Shortcuts
 
-| Key                 | Action                   |
-| ------------------- | ------------------------ |
-| `←` `→` `↑` `↓`     | Navigate pages           |
-| `+` `-`             | Zoom in/out              |
-| `0`                 | Reset zoom               |
-| `PageUp` `PageDown` | Navigate pages           |
-| `Home` `End`        | First/last page          |
-| `Escape`            | Cancel selection         |
-| Click + Drag        | Pan (when not selecting) |
+| Key             | Action                   |
+| --------------- | ------------------------ |
+| `←` `→` `↑` `↓` | Navigate pages           |
+| Click + Drag    | Pan (when not selecting) |
 
 ### Advanced Usage
 
